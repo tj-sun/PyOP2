@@ -47,6 +47,7 @@ from pyop2.sequential import Set, ExtrudedSet, MixedSet, Subset, DataSet, MixedD
 from pyop2.sequential import Map, MixedMap, DecoratedMap, Sparsity, Halo  # noqa: F401
 from pyop2.sequential import Global, GlobalDataSet        # noqa: F401
 from pyop2.sequential import Dat, MixedDat, DatView, Mat  # noqa: F401
+from pyop2.sequential import ParLoop                      # noqa: F401
 
 from coffee import coffee_init, O0
 
@@ -56,7 +57,7 @@ __all__ = ['configuration', 'READ', 'WRITE', 'RW', 'INC', 'MIN', 'MAX',
            'set_log_level', 'MPI', 'init', 'exit', 'Kernel', 'Set', 'ExtrudedSet',
            'MixedSet', 'Subset', 'DataSet', 'GlobalDataSet', 'MixedDataSet',
            'Halo', 'Dat', 'MixedDat', 'Mat', 'Global', 'Map', 'MixedMap',
-           'Sparsity', 'par_loop',
+           'Sparsity', 'par_loop', 'ParLoop',
            'DatView', 'DecoratedMap']
 
 
