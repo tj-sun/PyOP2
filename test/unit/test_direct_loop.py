@@ -85,10 +85,6 @@ class TestDirectLoop:
     def h(cls):
         return op2.Global(1, 1, np.uint32, "h")
 
-    @pytest.fixture
-    def soa(cls, delems2):
-        return op2.Dat(delems2, [xarray(), xarray()], np.uint32, "x", soa=True)
-
     def test_wo(self, elems, x):
         """Set a Dat to a scalar value with op2.WRITE."""
         kernel_wo = """void kernel_wo(unsigned int* x) { *x = 42; }"""
@@ -199,25 +195,6 @@ class TestDirectLoop:
         op2.par_loop(op2.Kernel(kernel_2d_wo, "kernel_2d_wo"),
                      elems, y(op2.WRITE))
         assert all(map(lambda x: all(x == [42, 43]), y.data))
-
-    def test_2d_dat_soa(self, elems, soa):
-        """Set both components of a vector-valued Dat in SoA order to a scalar
-        value."""
-        kernel_soa = """void kernel_soa(unsigned int * x) {
-          OP2_STRIDE(x, 0) = 42; OP2_STRIDE(x, 1) = 43;
-        }"""
-        op2.par_loop(op2.Kernel(kernel_soa, "kernel_soa"),
-                     elems, soa(op2.WRITE))
-        assert all(soa.data[:, 0] == 42) and all(soa.data[:, 1] == 43)
-
-    def test_soa_should_stay_c_contigous(self, elems, soa):
-        """Verify that a Dat in SoA order remains C contiguous after being
-        written to in a par_loop."""
-        k = "void dummy(unsigned int *x) {}"
-        assert soa.data.flags['C_CONTIGUOUS']
-        op2.par_loop(op2.Kernel(k, "dummy"), elems,
-                     soa(op2.WRITE))
-        assert soa.data.flags['C_CONTIGUOUS']
 
     def test_host_write(self, elems, x, g):
         """Increment a global by the values of a Dat."""

@@ -976,10 +976,6 @@ class TestMixedDatAPI:
         "MixedDat cdim should return a tuple of the DataSet cdims."
         assert op2.MixedDat(mdset).cdim == mdset.cdim
 
-    def test_mixed_dat_soa(self, mdat):
-        "MixedDat soa should return a tuple of the Dat soa flags."
-        assert mdat.soa == tuple(d.soa for d in mdat)
-
     def test_mixed_dat_data(self, mdat):
         "MixedDat data should return a tuple of the Dat data arrays."
         assert all((d1 == d2.data).all() for d1, d2 in zip(mdat.data, mdat))
@@ -1735,9 +1731,6 @@ class TestParLoopAPI:
         d = op2.Dat(s2 ** 1, [0] * 10, dtype=int)
         k = op2.Kernel("void k(int *x) {}", "k")
         op2.par_loop(k, s1, d(op2.READ, m[0]))
-        # Force evaluation otherwise this loop will remain in the trace forever
-        # in case of lazy evaluation mode
-        base._trace.evaluate_all()
 
 
 if __name__ == '__main__':
