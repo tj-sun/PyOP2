@@ -98,7 +98,7 @@ class Configuration(dict):
         "type_check": ("PYOP2_TYPE_CHECK", bool, True),
         "check_src_hashes": ("PYOP2_CHECK_SRC_HASHES", bool, True),
         "log_level": ("PYOP2_LOG_LEVEL", (str, int), "WARNING"),
-        "lazy_evaluation": ("PYOP2_LAZY", bool, True),
+        "lazy_evaluation": ("PYOP2_LAZY", bool, False),
         "lazy_max_trace_length": ("PYOP2_MAX_TRACE_LENGTH", int, 100),
         "cache_dir": ("PYOP2_CACHE_DIR", str,
                       os.path.join(gettempdir(),

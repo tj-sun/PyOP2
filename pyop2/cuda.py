@@ -84,6 +84,26 @@ class Map(Map):
     def _kernel_args_(self):
         return (self.device_handle, )
 
+class ExtrudedSet(ExtrudedSet):
+    """
+    ExtrudedSet for GPU.
+    """
+    @cached_property
+    def _kernel_args_(self):
+        m_gpu = cuda_driver.mem_alloc(int(self.layers_array.nbytes))
+        cuda_driver.memcpy_htod(m_gpu, self.layers_array)
+        return (m_gpu,)
+
+
+class Subset(Subset):
+    """
+    Subset for GPU.
+    """
+    @cached_property
+    def _kernel_args_(self):
+        m_gpu = cuda_driver.mem_alloc(int(self._indices.nbytes))
+        cuda_driver.memcpy_htod(m_gpu, self._indices)
+        return self._superset._kernel_args_ + (m_gpu, )
 
 class Arg(Arg):
 
@@ -126,6 +146,7 @@ class Dat(petsc_Dat):
         yield self._vec
         if access is not base.READ:
             self.halo_valid = False
+
 
     @cached_property
     def device_handle(self):
@@ -761,15 +782,19 @@ def sept(kernel, extruded=False):
 
     # {{{ making consts as globals
 
+    # from IPython import embed; embed()
+
     if pack_consts_to_globals:
         args_to_make_global = [tv.initializer.flatten()
                 for tv in kernel.temporary_variables.values()
                 if (tv.initializer is not None
-                    and tv.address_space == loopy.AddressSpace.GLOBAL)]
+                    and tv.address_space == loopy.AddressSpace.GLOBAL
+                    and tv.name[-7:] != "_offset")]
 
         new_temps = dict((tv.name, tv.copy(initializer=None))
                 if (tv.initializer is not None
-                    and tv.address_space == loopy.AddressSpace.GLOBAL)
+                    and tv.address_space == loopy.AddressSpace.GLOBAL
+                    and tv.name[-7:] != "_offset")
                 else (tv.name, tv) for tv in
                 kernel.temporary_variables.values())
 
