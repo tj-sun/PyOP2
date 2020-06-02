@@ -886,7 +886,6 @@ def gcd_tt_simple(kernel, extruded):
     # }}}
 
     # {{{ realizing batches
-
     kernel = loopy.split_iname(kernel, "n",
             nbatches_per_chunk * ncells_per_batch,
             outer_iname="ichunk",)
@@ -923,20 +922,21 @@ def gcd_tt_simple(kernel, extruded):
 
     # {{{ remove unnecessary dependencies on quadrature instructions
 
-    vars_not_neeeded_in_quad = written_in_load - read_in_quad
+    vars_not_needed_in_quad = written_in_load - read_in_quad
 
     # so lets just write in the basis part
-    written_in_load = written_in_load - vars_not_neeeded_in_quad
+    written_in_load = written_in_load - vars_not_needed_in_quad
 
     insns_to_be_added_in_basis = frozenset([insn.id for insn in
         kernel.instructions if insn.write_dependency_names()
-        & vars_not_neeeded_in_quad and 'gather' in insn.tags])
+        & vars_not_needed_in_quad and 'gather' in insn.tags])
 
     def _remove_unnecessary_deps_on_load(insn):
         return insn.copy(depends_on=insn.depends_on - insns_to_be_added_in_basis)
 
     kernel = loopy.map_instructions(kernel, quad_within,
             _remove_unnecessary_deps_on_load)
+
 
     def _add_unnecessary_instructions_to_basis(insn):
         if insn.id in insns_to_be_added_in_basis:
@@ -950,12 +950,13 @@ def gcd_tt_simple(kernel, extruded):
 
     # {{{ storing values between the stages
 
-    batch_vars = (written_in_quad & read_in_basis)
-    kernel = loopy.save_temporaries_in_loop(kernel, 'form_ip', batch_vars, within='iname:form_ip')
+    # batch_vars = (written_in_quad & read_in_basis)
+    # kernel = loopy.save_temporaries_in_loop(kernel, 'form_ip', batch_vars, within='iname:form_ip')
 
     batch_vars = (written_in_quad & read_in_basis) | (written_in_load & (read_in_basis | read_in_quad))
-    kernel = loopy.save_temporaries_in_loop(kernel, 'icell', batch_vars,
-            within="not tag:init_shared")
+    kernel = loopy.privatize_temporaries_with_inames(kernel, "icell", batch_vars)
+    # kernel = loopy.save_temporaries_in_loop(kernel, 'icell', batch_vars,
+    #         within="not tag:init_shared")
 
     # }}}
 
