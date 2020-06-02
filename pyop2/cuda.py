@@ -810,7 +810,8 @@ def gcd_tt_simple(kernel, extruded):
 
     # Experiment with these numbers to get speedup
     pack_consts_to_globals = configuration["cuda_const_as_global"]
-    ncells_per_batch = configuration["cuda_batch_per_block"]
+    # ncells_per_batch = configuration["cuda_batch_per_block"]
+    ncells_per_batch = configuration["cuda_block_size"]
     nbatches_per_chunk = 1
     args_to_make_global = []
 
