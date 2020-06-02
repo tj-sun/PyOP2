@@ -862,8 +862,8 @@ def gcd_tt_simple(kernel, extruded):
 
     else:
         # kernel = loopy.split_iname(kernel, "n", batch_size, outer_tag="g.0", inner_tag="l.0")
-        kernel = loopy.assume(kernel, "{0} mod {1} = 0".format("end", ncells_per_batch))
-        kernel = loopy.assume(kernel, "exists zz: zz > 0 and {0} = {1}*zz + {2}".format("end", ncells_per_batch, "start"))
+        kernel = loopy.assume(kernel, "{0} mod {1} = 0".format("end", ncells_per_batch * nthreads_per_cell))
+        kernel = loopy.assume(kernel, "exists zz: zz > 0 and {0} = {1}*zz + {2}".format("end", ncells_per_batch * nthreads_per_cell, "start"))
 
     # {{{ making consts as globals
 
