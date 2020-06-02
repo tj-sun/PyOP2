@@ -811,7 +811,7 @@ def gcd_tt_simple(kernel, extruded):
     # Experiment with these numbers to get speedup
     pack_consts_to_globals = configuration["cuda_const_as_global"]
     # ncells_per_batch = configuration["cuda_batch_per_block"]
-    ncells_per_batch = configuration["cuda_block_size"]
+    # ncells_per_batch = configuration["cuda_block_size"]
     nbatches_per_chunk = 1
     args_to_make_global = []
 
@@ -821,6 +821,7 @@ def gcd_tt_simple(kernel, extruded):
             kernel.get_iname_bounds('form_j', constants_only=True).size))
 
     nthreads_per_cell = int(np.gcd(nquad, nbasis))
+    ncells_per_batch = int(np.lcm(nthreads_per_cell, 32))
     # should be the minimum number needed to make `nthreads_per_cell` multiple of 32
     load_within = "tag:gather"
     quad_within = "tag:quadrature"
@@ -863,8 +864,8 @@ def gcd_tt_simple(kernel, extruded):
 
     else:
         # kernel = loopy.split_iname(kernel, "n", batch_size, outer_tag="g.0", inner_tag="l.0")
-        kernel = loopy.assume(kernel, "{0} mod {1} = 0".format("end", ncells_per_batch * nthreads_per_cell))
-        kernel = loopy.assume(kernel, "exists zz: zz > 0 and {0} = {1}*zz + {2}".format("end", ncells_per_batch * nthreads_per_cell, "start"))
+        kernel = loopy.assume(kernel, "{0} mod {1} = 0".format("end", ncells_per_batch))
+        kernel = loopy.assume(kernel, "exists zz: zz > 0 and {0} = {1}*zz + {2}".format("end", ncells_per_batch, "start"))
 
     # {{{ making consts as globals
 
