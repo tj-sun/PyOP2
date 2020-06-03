@@ -821,7 +821,8 @@ def gcd_tt_simple(kernel, extruded):
             kernel.get_iname_bounds('form_j', constants_only=True).size))
 
     nthreads_per_cell = int(np.gcd(nquad, nbasis))
-    ncells_per_batch = int(np.lcm(nthreads_per_cell, 32))
+    nthreads_per_batch = int(np.lcm(nthreads_per_cell, 32))
+    ncells_per_batch = int(nthreads_per_batch / nthreads_per_cell)
     # should be the minimum number needed to make `nthreads_per_cell` multiple of 32
     load_within = "tag:gather"
     quad_within = "tag:quadrature"
