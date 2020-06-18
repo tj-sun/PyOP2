@@ -806,8 +806,12 @@ def sept(kernel, extruded=False):
 
 def gcd_tt_simple(kernel, extruded):
 
-    if ("form_ip" not in kernel.all_inames()):
+    _quad_iname = "form_ip"
+    if (_quad_iname not in kernel.all_inames()):
         return sept(kernel, extruded)
+    _basis_iname = "form_j"
+    if (_basis_iname not in kernel.all_inames()):
+        _basis_iname = "form_j0"
 
     cuda_driver.Context.set_cache_config(cuda_driver.func_cache.PREFER_SHARED)
 
@@ -819,9 +823,9 @@ def gcd_tt_simple(kernel, extruded):
     args_to_make_global = []
 
     nquad = int(loopy.symbolic.pw_aff_to_expr(
-            kernel.get_iname_bounds('form_ip', constants_only=True).size))
+            kernel.get_iname_bounds(_quad_iname, constants_only=True).size))
     nbasis = int(loopy.symbolic.pw_aff_to_expr(
-            kernel.get_iname_bounds('form_j', constants_only=True).size))
+            kernel.get_iname_bounds(_basis_iname, constants_only=True).size))
 
     nthreads_per_cell = int(np.gcd(nquad, nbasis))
     nthreads_per_batch = int(np.lcm(nthreads_per_cell, 32))
@@ -980,9 +984,9 @@ def gcd_tt_simple(kernel, extruded):
             new_inames=["ichunk_basis", "icell_basis"],
             within="tag:basis or tag:scatter")
 
-    kernel = loopy.duplicate_inames(kernel, ["form_ip"],
+    kernel = loopy.duplicate_inames(kernel, [_quad_iname],
             new_inames=["form_ip_quad"], within="tag:quadrature")
-    kernel = loopy.duplicate_inames(kernel, ["form_ip"],
+    kernel = loopy.duplicate_inames(kernel, [_quad_iname],
             new_inames=["form_ip_basis"], within="tag:basis")
 
     kernel = loopy.remove_unused_inames(kernel)
