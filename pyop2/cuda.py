@@ -806,6 +806,9 @@ def sept(kernel, extruded=False):
 
 def gcd_tt_simple(kernel, extruded):
 
+    if ("form_ip" not in kernel.all_inames()):
+        return sept(kernel, extruded)
+
     cuda_driver.Context.set_cache_config(cuda_driver.func_cache.PREFER_SHARED)
 
     # Experiment with these numbers to get speedup
