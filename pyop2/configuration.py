@@ -92,6 +92,7 @@ class Configuration(dict):
         "cuda_num_layer": ("PYOP2_CUDA_NUM_LAYER", int, 32),
         "cuda_const_as_global": ("PYOP2_CUDA_CONST_GLOBAL", bool, False),
         "cuda_strategy": ("PYOP2_CUDA_STRATEGY", str, "sept"),
+        "cuda_tt_gather_tag": ("PYOP2_CUDA_TT_GATHER_TAG", str, "ilp"),
         "debug": ("PYOP2_DEBUG", bool, False),
         "cflags": ("PYOP2_CFLAGS", str, ""),
         "ldflags": ("PYOP2_LDFLAGS", str, ""),

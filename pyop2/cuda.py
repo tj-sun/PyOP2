@@ -1070,6 +1070,7 @@ def gcd_tt_simple(kernel, extruded):
 
     # {{{ re-distributing the gather work
     from collections import defaultdict
+    gather_iname_tag = configuration["cuda_tt_gather_tag"]
     gather_inames_to_instructions = defaultdict(list)
     for insn in kernel.instructions:
         if "gather" in insn.tags:
@@ -1090,7 +1091,7 @@ def gcd_tt_simple(kernel, extruded):
         kernel = loopy.split_iname(kernel, new_iname, nthreads_per_cell)
         kernel = loopy.join_inames(kernel, ["icell_load", new_iname + "_inner"],
                                    "local_id%d" % n_lids, within=within)
-        kernel = loopy.tag_inames(kernel, {new_iname + "_outer": "unr"},
+        kernel = loopy.tag_inames(kernel, {new_iname + "_outer": gather_iname_tag},
                                   ignore_nonexistent=True)
         n_lids += 1
 
@@ -1158,7 +1159,7 @@ def gcd_tt_simple(kernel, extruded):
         }
     for i in range(n_lids):
         iname_tags["local_id%d" % i] = "l.0"
-        iname_tags["aux_local_id%d_outer" % i] = "ilp"
+        iname_tags["aux_local_id%d_outer" % i] = gather_iname_tag
 
     kernel = loopy.tag_inames(kernel, iname_tags, ignore_nonexistent=True)
     kernel = remove_invariant_inames(kernel)
