@@ -1069,7 +1069,8 @@ def gcd_tt_simple(kernel, extruded):
             "tag:basis", synchronization_kind='local')
 
     # {{{ re-distributing the gather work
-
+    from collections import defaultdict
+    gather_inames_to_instructions = defaultdict(list)
     for insn in kernel.instructions:
         if "gather" in insn.tags:
             inames_to_merge = (insn.within_inames
@@ -1077,21 +1078,21 @@ def gcd_tt_simple(kernel, extruded):
             # maybe need to split to be valid for all cases?
             for priority in kernel.loop_priority:
                 if frozenset(priority) == inames_to_merge:
-                    inames_to_merge = priority
+                    gather_inames_to_instructions[inames_to_merge].append(insn.id)
                     break
+            else:
+                assert False, "can't find matching group of inames"
 
-            inames_to_merge = list(inames_to_merge)
-
-            kernel = loopy.join_inames(kernel, inames_to_merge, "aux_local_id%d" %
-                    n_lids, within="id:%s" % insn.id)
-            kernel = loopy.split_iname(kernel, "aux_local_id%d" % n_lids,
-                    nthreads_per_cell, within="id:%s" % insn.id)
-            kernel = loopy.join_inames(kernel, ["icell_load",
-                "aux_local_id%d_inner"
-                % n_lids], "local_id%d" % n_lids, within="id:%s" % insn.id)
-            kernel = loopy.tag_inames(kernel, (("aux_local_id%d_outer", "unr"),),
-                    ignore_nonexistent=True)
-            n_lids += 1
+    for inames_to_merge, instructions in gather_inames_to_instructions.items():
+        new_iname = "aux_local_id%d" % n_lids
+        within = " or ".join(["id:" + inst for inst in instructions])
+        kernel = loopy.join_inames(kernel, list(inames_to_merge), new_iname, within=within)
+        kernel = loopy.split_iname(kernel, new_iname, nthreads_per_cell)
+        kernel = loopy.join_inames(kernel, ["icell_load", new_iname + "_inner"],
+                                   "local_id%d" % n_lids, within=within)
+        kernel = loopy.tag_inames(kernel, {new_iname + "_outer": "unr"},
+                                  ignore_nonexistent=True)
+        n_lids += 1
 
     # }}}
 
@@ -1121,8 +1122,8 @@ def gcd_tt_simple(kernel, extruded):
         for insn in kernel.instructions if 'scatter' in insn.tags])
         - set(["ithreadblock_basis", "icell_basis", "ichunk_basis",
           "ibatch"]))
-    assert len(scatter_inames) == 1
-    scatter_iname = scatter_inames.pop()
+    assert len(scatter_inames) <= 2
+    scatter_iname = sorted(scatter_inames)[0]
 
     kernel = loopy.split_iname(kernel, basis_iname, nthreads_per_cell,
             inner_iname="basis_aux_lid0", within=basis_within)
